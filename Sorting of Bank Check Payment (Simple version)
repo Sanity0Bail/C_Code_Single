@@ -1,0 +1,125 @@
+#include<stdio.h>
+#define Q 152  /*银行总额*/
+#define N 7  /*支票总数*/
+#define Fee 20  /*退票费*/
+
+int idone(int x,int *a,int *b)  /*判断是否结束支付*/
+{
+    int i,flag=1;
+    for(i=0;i<N;i++)
+    {
+        if(b[i]==0&&a[i]<=x)
+        {
+            flag=0;
+            break;
+        }
+    }
+    return flag;
+}
+
+int select(int x,int *a,int *b)  /*支票是否可添加*/
+{
+    if(x>=*a&&*b==0)
+        return 1;
+    else
+        return 0; 
+}
+
+int item(int *a)  /*统计张数*/
+{
+    int i,sum=0;
+    for(i=0;i<N;i++)
+    {
+        sum+=a[i];
+    }
+    return sum;
+}
+
+int sum(int *a,int *b,int t)  /*统计当前所选面额之和*/
+{
+    int i,sum=0;
+    for(i=0;i<t;i++)
+    {
+        sum+=a[i]*b[i];
+    }
+    return sum;
+}
+
+int main()
+{
+    int ck[N]={0},pd[N]={0};    /*初始化支票面额、选择与否*/
+    int i,j,times,z;
+    int tpd=0;
+    int now;
+    printf("请输入各支票面额：");
+    for(i=0;i<N;i++)    /*读入支票面额*/
+    {
+        scanf("%d",&ck[i]);
+    }
+    for(i=0;i<N-1;i++)    /*支票面额排序*/
+    {
+        for(j=N-1;j>i;j--)
+        {
+            if(ck[j]<ck[j-1])
+            {
+                z=ck[j];
+                ck[j]=ck[j-1];
+                ck[j-1]=z;
+            }
+        }
+    }
+    i=0;
+    while(i<N)
+    {
+        times=item(pd);
+        now=Q-sum(ck,pd,N);
+        if(select(now,&ck[i],&pd[i])&&(times==tpd||times==tpd+1))  /*若能添加则添加*/
+        {  
+            pd[i]=1;
+            now-=ck[i];
+        }
+        else if(pd[i]==0&&ck[i]>=sum(ck,pd,i)&&times>tpd+1&&ck[i]<=Q)  /*若当前面额可取代小面额之和则替换*/
+        {
+            for(j=0;j<i;j++)
+            {
+                pd[j]=0;
+            }
+            pd[i]=1;
+            now=Q-sum(ck,pd,N);
+        }
+        
+        else if(pd[i]==0&&ck[0]>=now+sum(ck,pd,i)-ck[i]&&now+sum(ck,pd,i)-ck[i]>=0)  /*当前面额小于小面额之和但可替换*/
+        {
+            for(j=0;j<i;j++)
+            {
+                pd[j]=0;
+            }
+            pd[i]=1;
+            now=Q-sum(ck,pd,N);
+        }
+        i++;
+        if(i==N)
+        {
+            if(idone(now,ck,pd))
+                break;
+            else  
+            {
+                tpd=item(pd);  /*记录当次循环选择张数*/
+                i=0;
+            }
+        }
+    }
+    printf("应兑现的支票面额为：");
+    for(i=N-1;i>=0;i--)
+    {
+        if(pd[i])printf("%d ",ck[i]);   
+    }
+    printf("\n");
+    printf("应收取退票费的张数为：");
+    printf("%d\n",N-item(pd));
+    printf("最大退票费为：");
+    printf("%d\n",(N-item(pd))*Fee);
+    
+    return 0;
+}
+
